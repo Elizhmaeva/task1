@@ -30,7 +30,20 @@ TEXT, MUTED, GRID = "#0b0b0b", "#52514e", "#e4e3df"
 
 
 def run_experiments(transactions):
-    """Запускает Apriori для каждого порога и собирает результаты."""
+    """Запускает Apriori для каждого порога поддержки и собирает результаты.
+
+    Параметры:
+        transactions (list[tuple]) - список транзакций.
+
+    Возвращает:
+        list[dict] - по одному словарю на каждый порог с ключами:
+            min_support - порог поддержки (доля);
+            time_ms     - медиана времени работы по REPEATS запускам, мс;
+            total       - общее число частых наборов;
+            by_length   - {длина набора: число частых наборов этой длины};
+            candidates  - {k: число кандидатов C(k)};
+            frequent    - {набор: поддержка}.
+    """
     rows = []
     for min_support in THRESHOLDS:
         times = []
@@ -56,7 +69,14 @@ def run_experiments(transactions):
 
 
 def save_tables(rows, max_length):
-    """Сохраняет сводную таблицу и списки частых наборов."""
+    """Сохраняет в папку результатов сводную таблицу и списки частых наборов.
+
+    Параметры:
+        rows (list[dict]) - результаты экспериментов (см. run_experiments);
+        max_length (int) - наибольшая длина найденного частого набора.
+
+    Возвращаемого значения нет.
+    """
     path = os.path.join(RESULTS_DIR, "experiments.csv")
     with open(path, "w", encoding="utf-8-sig", newline="") as file:
         writer = csv.writer(file, delimiter=";")
@@ -81,7 +101,13 @@ def save_tables(rows, max_length):
 
 
 def style_axes(ax):
-    """Общее оформление осей: без рамки, только горизонтальная сетка."""
+    """Общее оформление диаграммы: без рамки, только горизонтальная сетка.
+
+    Параметры:
+        ax (matplotlib.axes.Axes) - оси диаграммы, которые нужно оформить.
+
+    Возвращаемого значения нет.
+    """
     for side in ("top", "right", "left"):
         ax.spines[side].set_visible(False)
     ax.spines["bottom"].set_color(MUTED)
@@ -91,7 +117,13 @@ def style_axes(ax):
 
 
 def plot_time(rows):
-    """Диаграмма 1: время работы при разных порогах поддержки."""
+    """Диаграмма 1: время работы при разных порогах поддержки (time.png).
+
+    Параметры:
+        rows (list[dict]) - результаты экспериментов (см. run_experiments).
+
+    Возвращаемого значения нет, диаграмма сохраняется в файл.
+    """
     labels = [f"{row['min_support'] * 100:g} %" for row in rows]
     values = [row["time_ms"] for row in rows]
 
@@ -113,7 +145,14 @@ def plot_time(rows):
 
 
 def plot_counts(rows, max_length):
-    """Диаграмма 2: количество частых наборов каждой длины."""
+    """Диаграмма 2: количество частых наборов каждой длины (counts.png).
+
+    Параметры:
+        rows (list[dict]) - результаты экспериментов (см. run_experiments);
+        max_length (int) - наибольшая длина найденного частого набора.
+
+    Возвращаемого значения нет, диаграмма сохраняется в файл.
+    """
     labels = [f"{row['min_support'] * 100:g} %" for row in rows]
     colors = [BLUE, ORANGE, AQUA, "#eda100"]
     width = 0.8 / max_length                     # ширина одного столбца в группе
@@ -144,6 +183,9 @@ def plot_counts(rows, max_length):
 
 
 def main():
+    """Точка входа: проводит эксперименты, выводит таблицу на экран,
+    сохраняет таблицы и диаграммы. Параметров и возвращаемого значения нет.
+    """
     os.makedirs(RESULTS_DIR, exist_ok=True)
     transactions = load_transactions(DATASET)
     print(f"Транзакций: {len(transactions)}")
